@@ -50,6 +50,25 @@
   <p id="approveResult"></p>
 </div>
 
+<!--查看所有授权情况-->
+<div>
+  <h2>check two address Approve state</h2>
+  <input type="text" id="approveCheckAddress1" placeholder="from address">
+  <input type="text" id="approveCheckAddress2" placeholder="to address">
+  <button onclick="checkAllowance()">check two address Approve</button>
+</div>
+
+
+<!--授权转账-->
+<div>
+  <h2>Transfer From</h2>
+  <input type="text" id="transferFromSender" placeholder="From address">
+  <input type="text" id="transferFromRecipient" placeholder="To address">
+  <input type="text" id="transferFromAmount" placeholder="Amount">
+  <button onclick="transferFromTokens()">Transfer From</button>
+  <p id="transferFromResult"></p>
+</div>
+
 <script>
   // 这里假设用户已经安装了MetaMask
   const { ethers } = window;
@@ -57,10 +76,274 @@
   let signer;
   let tokenContract;
 
-  const tokenAddress = "YOUR_CONTRACT_ADDRESS"; // ERC20合约地址
-  const tokenAbi = [ // ERC20合约的ABI
-    //... (省略以简化)
-  ];
+  const tokenAddress = "0x4397c1d13966f4ec04c4b810e54665784a9bc279"; // ERC20合约地址
+  const tokenAbi = [
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "name_",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "symbol_",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "spender",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "Approval",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "Transfer",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "allowance",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "spender",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "approve",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "balanceOf",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "burn",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "decimals",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "mint",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "name",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "symbol",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalSupply",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "transfer",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "transferFrom",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ]
+  // const tokenAbi = []
 
   // 初始化ethers.js并连接到MetaMask
   async function init() {
@@ -68,6 +351,8 @@
     await provider.send("eth_requestAccounts", []); // 请求用户授权
     signer = provider.getSigner(); // 获取签名者，用于发送交易
     tokenContract = new ethers.Contract(tokenAddress, tokenAbi, signer);
+
+    getConnectedWalletAddress()
   }
 
   // 查询余额
@@ -107,9 +392,24 @@
     }
   }
 
+  async function transferFromTokens() {
+    const sender = document.getElementById('transferFromSender').value;
+    const recipient = document.getElementById('transferFromRecipient').value;
+    const amount = ethers.utils.parseUnits(document.getElementById('transferFromAmount').value, 18); // 假设代币有18位小数
+    console.log('amount', amount);
+    try {
+      const tx = await tokenContract.transferFrom(sender, recipient, amount);
+      await tx.wait();
+      document.getElementById('transferFromResult').innerText = `TransferFrom successful: ${tx.hash}`;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   // 铸造代币
   async function mintTokens() {
     const amount = ethers.utils.parseUnits(document.getElementById('mintAmount').value, 18); // 假设代币有18位小数
+    console.log('amount', amount);
     try {
       const tx = await tokenContract.mint(amount);
       await tx.wait();
@@ -130,6 +430,43 @@
       console.error(error);
     }
   }
+
+  async function checkAllowance() {
+    try {
+      const owner = document.getElementById('approveCheckAddress1').value;
+      const spender = document.getElementById('approveCheckAddress2').value;
+      const allowance = await tokenContract.allowance(owner, spender);
+      console.log(`Allowance: ${allowance.toString()}`);
+    } catch (error) {
+      console.error(`Error fetching allowance: ${error}`);
+    }
+  }
+
+  async function getConnectedWalletAddress() {
+    // 首先，我们需要检查window.ethereum是否可用
+    if (window.ethereum) {
+      try {
+        // 请求用户授权连接钱包
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+        // 创建一个提供者并获取签名者
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+
+        // 获取当前连接的钱包地址
+        const address = await signer.getAddress();
+        console.log(`Connected wallet address: ${address}`);
+        return address;
+      } catch (error) {
+        // 捕获并处理错误，如用户拒绝连接
+        console.error('An error occurred while fetching the wallet address:', error);
+      }
+    } else {
+      // 如果用户没有安装MetaMask（或其他以太坊钱包插件），则显示警告
+      console.warn('Please install MetaMask or another Ethereum wallet.');
+    }
+  }
+
 
   // 页面加载时初始化
   window.onload = init;
