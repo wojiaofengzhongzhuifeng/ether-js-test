@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ERC20 Token Interface with ethers.js</title>
+  <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
+</head>
+<body>
+<h1>ERC20 Token Interface</h1>
+
+<!-- 铸造代币 -->
+<div>
+  <h2>Mint Tokens</h2>
+  <input type="text" id="mintAmount" placeholder="Amount to mint">
+  <button onclick="mintTokens()">Mint</button>
+  <p id="mintResult"></p>
+</div>
+
+<!-- 销毁代币 -->
+<div>
+  <h2>Burn Tokens</h2>
+  <input type="text" id="burnAmount" placeholder="Amount to burn">
+  <button onclick="burnTokens()">Burn</button>
+  <p id="burnResult"></p>
+</div>
+
+<!-- 查询余额 -->
+<div>
+  <h2>Check Balance</h2>
+  <input type="text" id="balanceAddress" placeholder="Enter address">
+  <button onclick="checkBalance()">Check</button>
+  <p id="balanceResult"></p>
+</div>
+
+<!-- 转账 -->
+<div>
+  <h2>Transfer Tokens</h2>
+  <input type="text" id="transferTo" placeholder="To address">
+  <input type="text" id="transferAmount" placeholder="Amount">
+  <button onclick="transferTokens()">Transfer</button>
+  <p id="transferResult"></p>
+</div>
+
+<!-- 授权 -->
+<div>
+  <h2>Approve</h2>
+  <input type="text" id="approveSpender" placeholder="Spender address">
+  <input type="text" id="approveAmount" placeholder="Amount">
+  <button onclick="approveTokens()">Approve</button>
+  <p id="approveResult"></p>
+</div>
+
+<script>
+  // 这里假设用户已经安装了MetaMask
+  const { ethers } = window;
+  let provider;
+  let signer;
+  let tokenContract;
+
+  const tokenAddress = "YOUR_CONTRACT_ADDRESS"; // ERC20合约地址
+  const tokenAbi = [ // ERC20合约的ABI
+    //... (省略以简化)
+  ];
+
+  // 初始化ethers.js并连接到MetaMask
+  async function init() {
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    await provider.send("eth_requestAccounts", []); // 请求用户授权
+    signer = provider.getSigner(); // 获取签名者，用于发送交易
+    tokenContract = new ethers.Contract(tokenAddress, tokenAbi, signer);
+  }
+
+  // 查询余额
+  async function checkBalance() {
+    const address = document.getElementById('balanceAddress').value;
+    try {
+      const balance = await tokenContract.balanceOf(address);
+      document.getElementById('balanceResult').innerText = `Balance: ${balance}`;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  // 转账
+  async function transferTokens() {
+    const to = document.getElementById('transferTo').value;
+    const amount = ethers.utils.parseUnits(document.getElementById('transferAmount').value, 18); // 假设代币有18位小数
+    try {
+      const tx = await tokenContract.transfer(to, amount);
+      await tx.wait();
+      document.getElementById('transferResult').innerText = `Transfer successful: ${tx.hash}`;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  // 授权
+  async function approveTokens() {
+    const spender = document.getElementById('approveSpender').value;
+    const amount = ethers.utils.parseUnits(document.getElementById('approveAmount').value, 18); // 假设代币有18位小数
+    try {
+      const tx = await tokenContract.approve(spender, amount);
+      await tx.wait();
+      document.getElementById('approveResult').innerText = `Approve successful: ${tx.hash}`;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  // 铸造代币
+  async function mintTokens() {
+    const amount = ethers.utils.parseUnits(document.getElementById('mintAmount').value, 18); // 假设代币有18位小数
+    try {
+      const tx = await tokenContract.mint(amount);
+      await tx.wait();
+      document.getElementById('mintResult').innerText = `Mint successful: ${tx.hash}`;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  // 销毁代币
+  async function burnTokens() {
+    const amount = ethers.utils.parseUnits(document.getElementById('burnAmount').value, 18); // 假设代币有18位小数
+    try {
+      const tx = await tokenContract.burn(amount);
+      await tx.wait();
+      document.getElementById('burnResult').innerText = `Burn successful: ${tx.hash}`;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  // 页面加载时初始化
+  window.onload = init;
+</script>
+</body>
+</html>
